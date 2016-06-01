@@ -25,12 +25,12 @@ def test_svm():
 
 def test_svm_sparse():
     X = sparse.csr_matrix([[1,1,1],[1,1,0],[1,0,0],[0,0,0], [0,1,1], [0,0,1]])
-    y = sparse.csr_matrix([1,1,1,0,0,0])
+    y = sparse.csr_matrix([1,1,1,0,0,0]).T
 
     svm = pegasos.PegasosSVMClassifier(iterations=1000)
     svm.fit(X, y)
 
-    assert np.all(svm.predict(X) == y.todense())
+    assert np.all(svm.predict(X) == y.todense().T)
 
 
 def test_logreg_probability():

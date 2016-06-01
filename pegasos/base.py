@@ -18,7 +18,7 @@
 from abc import ABCMeta, abstractmethod
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.preprocessing import LabelEncoder
-from sklearn.utils import atleast2d_or_csr
+from sklearn.utils import check_array
 from scipy import sparse
 
 from . import pegasos, constants
@@ -62,7 +62,7 @@ class PegasosBase(BaseEstimator, ClassifierMixin):
         # training algorithm requires the labels to be -1 and +1.
         y[y==0] = -1
 
-        X = atleast2d_or_csr(X, dtype=np.float64, order="C")
+        X = check_array(X, accept_sparse='csr', dtype=np.float64, order='C', copy=True, ensure_2d=True)
 
         if X.shape[0] != y.shape[0]:
             raise ValueError("X and y have incompatible shapes.\n"
