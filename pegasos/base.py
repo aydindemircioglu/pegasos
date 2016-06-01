@@ -36,15 +36,20 @@ class PegasosBase(BaseEstimator, ClassifierMixin):
                  lambda_reg,
                  learner_type,
                  loop_type,
+                 classes,
+                 applyProjection,
                  verbose):
 
         self.iterations = iterations
         self.lambda_reg = lambda_reg
         self.loop_type = loop_type
         self.learner_type = learner_type
+        self.applyProjection = applyProjection
+        self.classes = classes
 
         self.verbose = verbose
 
+        self.iterCounter = 0
         self.weight_vector = None
 
     def fit(self, X, y):
@@ -52,7 +57,8 @@ class PegasosBase(BaseEstimator, ClassifierMixin):
             y = np.asarray(y.todense())
 
         self._enc = LabelEncoder()
-        y = self._enc.fit_transform(y)
+        self._enc.fit (self.classes)
+        y = self._enc.transform(y)
 
         if len(self.classes_) != 2:
             raise ValueError("The number of classes must be 2, "
@@ -70,6 +76,7 @@ class PegasosBase(BaseEstimator, ClassifierMixin):
                              (X.shape[0], y.shape[0]))
 
         self.weight_vector = WeightVector(X)
+        self.iterCounter = 0
 
         if self.loop_type == constants.LOOP_BALANCED_STOCHASTIC:
             pegasos.train_stochastic_balanced(self, X, y)
@@ -77,6 +84,49 @@ class PegasosBase(BaseEstimator, ClassifierMixin):
             pegasos.train_stochastic(self, X, y)
         else:
             raise ValueError('%s: unknown loop type' % self.loop_type)
+
+        return self
+
+
+    def partial_fit(self, X, y):
+        if sparse.issparse(y):
+            y = np.asarray(y.todense())
+
+        if not hasattr(self, '_enc'):
+            self._enc = LabelEncoder()
+            self._enc.fit (self.classes)
+
+        y = self._enc.transform(y)
+
+        if len(self.classes_) != 2:
+            raise ValueError("The number of classes must be 2, "
+                             "use sklearn.multiclass for more classes.")
+
+        # The LabelEncoder maps the binary labels to 0 and 1 but the
+        # training algorithm requires the labels to be -1 and +1.
+        y[y==0] = -1
+
+        X = check_array(X, accept_sparse='csr', dtype=np.float64, order='C', copy=True, ensure_2d=True)
+
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("X and y have incompatible shapes.\n"
+                             "X has %s samples, but y has %s." %
+                             (X.shape[0], y.shape[0]))
+
+        if self.weight_vector == None:
+            self.weight_vector = WeightVector(X)
+
+        tmp = self.iterations
+        self.iterations = X.shape[0]
+
+        if self.loop_type == constants.LOOP_BALANCED_STOCHASTIC:
+            pegasos.train_stochastic_balanced(self, X, y)
+        elif self.loop_type == constants.LOOP_STOCHASTIC:
+            pegasos.train_stochastic(self, X, y)
+        else:
+            raise ValueError('%s: unknown loop type' % self.loop_type)
+
+        self.iterations = tmp
 
         return self
 

@@ -23,6 +23,8 @@ class PegasosSVMClassifier(SVMPegasosBase):
                  iterations=constants.DFLT_ITERATIONS,
                  lambda_reg=constants.DFLT_LAMBDA_REG,
                  loop_type=constants.LOOP_STOCHASTIC,
+                 classes = [],
+                 applyProjection=False,
                  verbose=0):
 
         super(SVMPegasosBase, self).__init__(
@@ -30,6 +32,8 @@ class PegasosSVMClassifier(SVMPegasosBase):
                 lambda_reg,
                 constants.LEARNER_PEGASOS_SVM,
                 loop_type,
+                classes,
+                applyProjection,
                 verbose)
 
 
@@ -38,6 +42,8 @@ class PegasosLogisticRegression(LogisticPegasosBase):
                  iterations=constants.DFLT_ITERATIONS,
                  lambda_reg=constants.DFLT_LAMBDA_REG,
                  loop_type=constants.LOOP_STOCHASTIC,
+                 classes = [],
+                 applyProjection=False,
                  verbose=0):
 
         super(PegasosLogisticRegression, self).__init__(
@@ -45,5 +51,7 @@ class PegasosLogisticRegression(LogisticPegasosBase):
                 lambda_reg,
                 constants.LEARNER_PEGASOS_LOGREG,
                 loop_type,
+                classes,
+                applyProjection,
                 verbose)
 

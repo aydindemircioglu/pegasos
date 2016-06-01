@@ -31,6 +31,8 @@ class SVMPegasosBase(PegasosBase):
                  lambda_reg,
                  learner_type,
                  loop_type,
+                 classes,
+                 applyProjection,
                  verbose):
 
         if learner_type != constants.LEARNER_PEGASOS_SVM:
@@ -41,6 +43,8 @@ class SVMPegasosBase(PegasosBase):
                 lambda_reg,
                 learner_type,
                 loop_type,
+                classes,
+                applyProjection,
                 verbose)
 
 
@@ -53,6 +57,8 @@ class LogisticPegasosBase(PegasosBase):
                  lambda_reg,
                  learner_type,
                  loop_type,
+                 classes,
+                 applyProjection,
                  verbose):
 
         if learner_type != constants.LEARNER_PEGASOS_LOGREG:
@@ -63,6 +69,8 @@ class LogisticPegasosBase(PegasosBase):
                 lambda_reg,
                 learner_type,
                 loop_type,
+                classes,
+                applyProjection,
                 verbose)
 
     def predict_proba(self, X):

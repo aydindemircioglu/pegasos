@@ -36,41 +36,46 @@ def etaval(lambda_reg, iteration):
     return 1.0 / (lambda_reg * iteration)
 
 def pegasos_projection(w, lambda_reg):
-    projection = 1.0 / math.sqrt(lambda_reg * w.squared_norm)
-    if projection < 1.0:
-        w.scale_to(projection)
+	projection = 1.0 / math.sqrt(lambda_reg * w.squared_norm)
+	if projection < 1.0:
+		w.scale_to(projection)
 
-def _single_svm_step(xi, yi, w, eta, lambda_reg):
+def _single_svm_step(xi, yi, w, eta, lambda_reg, applyProjection):
     p = yi * w.inner_product(xi)
     L2_regularize(w, eta, lambda_reg)
     if p < 1.0 and yi != 0.0:
         w.add(xi, (eta * yi))
-    pegasos_projection(w, lambda_reg)
+    if applyProjection == True:
+        pegasos_projection(w, lambda_reg)
 
-def _single_logreg_step(xi, yi, w, eta, lambda_reg):
+def _single_logreg_step(xi, yi, w, eta, lambda_reg, applyProjection):
     loss = yi / (1 + np.exp(yi * w.inner_product(xi)))
     L2_regularize(w, eta, lambda_reg)
     w.add(xi, (eta * loss))
-    pegasos_projection(w, lambda_reg)
+    if applyProjection == True:
+        pegasos_projection(w, lambda_reg)
 
 def train_stochastic(model, X, y):
+    print 'train_stochastic: i=%d' % model.iterations
     for iteration in range(1, model.iterations):
+        model.iterCounter = model.iterCounter + 1
         i = random.randint(0, X.shape[0]-1)
 
         xi = X[i]
         yi = y[i]
 
-        eta = etaval(model.lambda_reg, iteration)
+        eta = etaval(model.lambda_reg, model.iterCounter)
 
         if model.learner_type == constants.LEARNER_PEGASOS_SVM:
-            _single_svm_step(xi, yi, model.weight_vector, eta, model.lambda_reg)
+            _single_svm_step(xi, yi, model.weight_vector, eta, model.lambda_reg, model.applyProjection)
         elif model.learner_type == constants.LEARNER_PEGASOS_LOGREG:
-            _single_logreg_step(xi, yi, model.weight_vector, eta, model.lambda_reg)
+            _single_logreg_step(xi, yi, model.weight_vector, eta, model.lambda_reg, model.applyProjection)
         else:
             raise ValueError('%s: unknown learner type' % model.loop_type)
 
         if model.verbose > 1 or (model.verbose == 1 and iteration % 1000 == 0):
             print 'train_stochastic: i=%d' % iteration
+            print 'train_stochastic: i=%d' % model.iterations
 
 def train_stochastic_balanced(model, X, y):
     """
@@ -83,6 +88,7 @@ def train_stochastic_balanced(model, X, y):
     neg_idx = np.where(y==-1)[0]
 
     for iteration in range(1, model.iterations):
+        model.iterCounter = model.iterCounter + 1
         pos_i = np.random.choice(pos_idx)
         neg_i = np.random.choice(neg_idx)
 
@@ -91,14 +97,14 @@ def train_stochastic_balanced(model, X, y):
         neg_xi = X[neg_i]
         neg_yi = y[neg_i]
 
-        eta = etaval(model.lambda_reg, iteration)
+        eta = etaval(model.lambda_reg, model.iterCounter)
 
         if model.learner_type == constants.LEARNER_PEGASOS_SVM:
-            _single_svm_step(pos_xi, pos_yi, model.weight_vector, eta, model.lambda_reg)
-            _single_svm_step(neg_xi, neg_yi, model.weight_vector, eta, model.lambda_reg)
+            _single_svm_step(pos_xi, pos_yi, model.weight_vector, eta, model.lambda_reg, model.applyProjection)
+            _single_svm_step(neg_xi, neg_yi, model.weight_vector, eta, model.lambda_reg, model.applyProjection)
         elif model.learner_type == constants.LEARNER_PEGASOS_LOGREG:
-            _single_logreg_step(pos_xi, neg_yi, model.weight_vector, eta, model.lambda_reg)
-            _single_logreg_step(neg_xi, neg_yi, model.weight_vector, eta, model.lambda_reg)
+            _single_logreg_step(pos_xi, neg_yi, model.weight_vector, eta, model.lambda_reg, model.applyProjection)
+            _single_logreg_step(neg_xi, neg_yi, model.weight_vector, eta, model.lambda_reg, )
         else:
             raise ValueError('%s: unknown learner type' % model.loop_type)
 
